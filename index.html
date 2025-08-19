@@ -126,14 +126,15 @@
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
-    camera.position.set(0, 1.6, 5);
-    camera.lookAt(0, 1, 0);
+    // First-person view from behind the counter
+    camera.position.set(0, 1.6, -1);
+    camera.lookAt(0, 1, 10);
 
     const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
     scene.add(ambient);
 
     const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(10, 10),
+      new THREE.PlaneGeometry(50, 50),
       new THREE.MeshBasicMaterial({ color: 0xdddddd })
     );
     floor.rotation.x = -Math.PI / 2;
@@ -146,16 +147,31 @@
     counter.position.set(0, 0.5, 0);
     scene.add(counter);
 
-    // Door setup
+    // Door setup (sliding panels)
     const doorGroup = new THREE.Group();
-    doorGroup.position.set(0, 1, 2);
-    const door = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 2, 0.1),
+    const doorZ = 10;
+    doorGroup.position.set(0, 1, doorZ);
+
+    const leftDoor = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 2, 0.1),
       new THREE.MeshBasicMaterial({ color: 0x996633 })
     );
-    door.position.set(0.5, 0, 0); // pivot on left edge
-    doorGroup.add(door);
+    leftDoor.position.set(-0.25, 0, 0);
+
+    const rightDoor = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 2, 0.1),
+      new THREE.MeshBasicMaterial({ color: 0x996633 })
+    );
+    rightDoor.position.set(0.25, 0, 0);
+
+    doorGroup.add(leftDoor);
+    doorGroup.add(rightDoor);
     scene.add(doorGroup);
+
+    const leftClosedX = -0.25;
+    const rightClosedX = 0.25;
+    const leftOpenX = -0.75;
+    const rightOpenX = 0.75;
 
     // Customer setup (simple human figure)
     const customer = new THREE.Group();
@@ -171,7 +187,7 @@
     head.position.y = 1.1;
     customer.add(body);
     customer.add(head);
-    customer.position.set(0, 0, 4.5);
+    customer.position.set(0, 0, 20);
     scene.add(customer);
 
     bubble.addEventListener('click', () => {
@@ -198,10 +214,10 @@
 
       if (moving) {
         customer.position.z -= 0.02;
-        if (customer.position.z <= 3 && doorState === 'closed') {
+        if (customer.position.z <= doorZ + 2 && doorState === 'closed') {
           doorState = 'opening';
         }
-        if (customer.position.z <= 1.5 && doorState === 'open') {
+        if (customer.position.z <= doorZ - 2 && doorState === 'open') {
           doorState = 'closing';
         }
         if (customer.position.z <= 0.5) {
@@ -212,15 +228,19 @@
       }
 
       if (doorState === 'opening') {
-        doorGroup.rotation.y = THREE.MathUtils.lerp(doorGroup.rotation.y, -Math.PI / 2, 0.1);
-        if (doorGroup.rotation.y <= -Math.PI / 2 + 0.01) {
-          doorGroup.rotation.y = -Math.PI / 2;
+        leftDoor.position.x = THREE.MathUtils.lerp(leftDoor.position.x, leftOpenX, 0.1);
+        rightDoor.position.x = THREE.MathUtils.lerp(rightDoor.position.x, rightOpenX, 0.1);
+        if (Math.abs(leftDoor.position.x - leftOpenX) < 0.01) {
+          leftDoor.position.x = leftOpenX;
+          rightDoor.position.x = rightOpenX;
           doorState = 'open';
         }
       } else if (doorState === 'closing') {
-        doorGroup.rotation.y = THREE.MathUtils.lerp(doorGroup.rotation.y, 0, 0.1);
-        if (doorGroup.rotation.y >= -0.01) {
-          doorGroup.rotation.y = 0;
+        leftDoor.position.x = THREE.MathUtils.lerp(leftDoor.position.x, leftClosedX, 0.1);
+        rightDoor.position.x = THREE.MathUtils.lerp(rightDoor.position.x, rightClosedX, 0.1);
+        if (Math.abs(leftDoor.position.x - leftClosedX) < 0.01) {
+          leftDoor.position.x = leftClosedX;
+          rightDoor.position.x = rightClosedX;
           doorState = 'closed';
         }
       }
