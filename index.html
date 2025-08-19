@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>찜질방 경영게임</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+    }
+    #top-bar {
+      background: #ffcc66;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+    }
+    #content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+    }
+    #map-toggle {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      font-size: 18px;
+      background: #ff9966;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+    }
+    #map-menu {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.95);
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      display: none;
+      flex-wrap: wrap;
+      width: 90%;
+      max-width: 400px;
+      justify-content: space-around;
+    }
+    #map-menu button {
+      margin: 5px;
+      flex: 1 1 40%;
+      padding: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div id="top-bar">
+    <div>💰 <span id="money">0</span></div>
+    <div>😊 <span id="satisfaction">0</span></div>
+  </div>
+  <div id="content">카운터</div>
+  <button id="map-toggle">맵</button>
+  <div id="map-menu">
+    <button data-room="카운터">카운터</button>
+    <button data-room="탈의실">탈의실</button>
+    <button data-room="목욕탕">목욕탕</button>
+    <button data-room="홀">홀</button>
+    <button data-room="온찜질방">온찜질방</button>
+    <button data-room="냉찜질방">냉찜질방</button>
+  </div>
+  <script>
+    const mapToggle = document.getElementById('map-toggle');
+    const mapMenu = document.getElementById('map-menu');
+    const content = document.getElementById('content');
+
+    mapToggle.addEventListener('click', () => {
+      if (mapMenu.style.display === 'flex') {
+        mapMenu.style.display = 'none';
+        mapToggle.textContent = '맵';
+      } else {
+        mapMenu.style.display = 'flex';
+        mapToggle.textContent = '닫기';
+      }
+    });
+
+    mapMenu.addEventListener('click', (e) => {
+      if (e.target.tagName === 'BUTTON') {
+        const room = e.target.getAttribute('data-room');
+        content.textContent = room;
+        mapMenu.style.display = 'none';
+        mapToggle.textContent = '맵';
+      }
+    });
+  </script>
+</body>
+</html>
