@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>찜질방 경영게임</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
   <style>
     body, html {
       margin: 0;
@@ -24,10 +25,21 @@
     }
     #content {
       flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 24px;
+      position: relative;
+    }
+    #game {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #bubble {
+      position: absolute;
+      display: none;
+      padding: 5px 10px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
     }
     #map-toggle {
       position: fixed;
@@ -69,7 +81,10 @@
     <div>💰 <span id="money">0</span></div>
     <div>😊 <span id="satisfaction">0</span></div>
   </div>
-  <div id="content">카운터</div>
+  <div id="content">
+    <canvas id="game"></canvas>
+    <div id="bubble">🔑</div>
+  </div>
   <button id="map-toggle">맵</button>
   <div id="map-menu">
     <button data-room="카운터">카운터</button>
@@ -82,7 +97,8 @@
   <script>
     const mapToggle = document.getElementById('map-toggle');
     const mapMenu = document.getElementById('map-menu');
-    const content = document.getElementById('content');
+    const moneyEl = document.getElementById('money');
+    let money = 0;
 
     mapToggle.addEventListener('click', () => {
       if (mapMenu.style.display === 'flex') {
@@ -97,11 +113,69 @@
     mapMenu.addEventListener('click', (e) => {
       if (e.target.tagName === 'BUTTON') {
         const room = e.target.getAttribute('data-room');
-        content.textContent = room;
+        // room change can be handled here
         mapMenu.style.display = 'none';
         mapToggle.textContent = '맵';
       }
     });
+
+    // --- 3D Scene ---
+    const canvas = document.getElementById('game');
+    const bubble = document.getElementById('bubble');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+    camera.position.set(0, 1.6, 2);
+    camera.lookAt(0, 1, 0);
+
+    const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+    scene.add(ambient);
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(10, 10),
+      new THREE.MeshBasicMaterial({ color: 0xdddddd })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    scene.add(floor);
+
+    const counter = new THREE.Mesh(
+      new THREE.BoxGeometry(3, 1, 1),
+      new THREE.MeshBasicMaterial({ color: 0xffcc66 })
+    );
+    counter.position.set(0, 0.5, 0);
+    scene.add(counter);
+
+    const customer = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 1, 0.5),
+      new THREE.MeshBasicMaterial({ color: 0x6699ff })
+    );
+    customer.position.set(0, 0.5, -1.5);
+    scene.add(customer);
+    bubble.style.display = 'block';
+
+    bubble.addEventListener('click', () => {
+      money += 100;
+      moneyEl.textContent = money;
+      scene.remove(customer);
+      bubble.style.display = 'none';
+    });
+
+    function updateBubblePosition() {
+      const vector = customer.position.clone().add(new THREE.Vector3(0, 1, 0));
+      vector.project(camera);
+      const x = (vector.x * 0.5 + 0.5) * canvas.clientWidth;
+      const y = (-vector.y * 0.5 + 0.5) * canvas.clientHeight;
+      bubble.style.left = `${x - bubble.offsetWidth / 2}px`;
+      bubble.style.top = `${y - bubble.offsetHeight - 10}px`;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+      if (bubble.style.display !== 'none') updateBubblePosition();
+    }
+    animate();
   </script>
 </body>
 </html>
