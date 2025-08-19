@@ -126,7 +126,7 @@
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
-    camera.position.set(0, 1.6, 2);
+    camera.position.set(0, 1.6, 5);
     camera.lookAt(0, 1, 0);
 
     const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
@@ -146,13 +146,33 @@
     counter.position.set(0, 0.5, 0);
     scene.add(counter);
 
-    const customer = new THREE.Mesh(
-      new THREE.BoxGeometry(0.5, 1, 0.5),
+    // Door setup
+    const doorGroup = new THREE.Group();
+    doorGroup.position.set(0, 1, 2);
+    const door = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 2, 0.1),
+      new THREE.MeshBasicMaterial({ color: 0x996633 })
+    );
+    door.position.set(0.5, 0, 0); // pivot on left edge
+    doorGroup.add(door);
+    scene.add(doorGroup);
+
+    // Customer setup (simple human figure)
+    const customer = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.25, 0.25, 1),
       new THREE.MeshBasicMaterial({ color: 0x6699ff })
     );
-    customer.position.set(0, 0.5, -1.5);
+    body.position.y = 0.5;
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.2),
+      new THREE.MeshBasicMaterial({ color: 0xffccaa })
+    );
+    head.position.y = 1.1;
+    customer.add(body);
+    customer.add(head);
+    customer.position.set(0, 0, 4.5);
     scene.add(customer);
-    bubble.style.display = 'block';
 
     bubble.addEventListener('click', () => {
       money += 100;
@@ -170,8 +190,41 @@
       bubble.style.top = `${y - bubble.offsetHeight - 10}px`;
     }
 
+    let moving = true;
+    let doorState = 'closed';
+
     function animate() {
       requestAnimationFrame(animate);
+
+      if (moving) {
+        customer.position.z -= 0.02;
+        if (customer.position.z <= 3 && doorState === 'closed') {
+          doorState = 'opening';
+        }
+        if (customer.position.z <= 1.5 && doorState === 'open') {
+          doorState = 'closing';
+        }
+        if (customer.position.z <= 0.5) {
+          moving = false;
+          bubble.style.display = 'block';
+          updateBubblePosition();
+        }
+      }
+
+      if (doorState === 'opening') {
+        doorGroup.rotation.y = THREE.MathUtils.lerp(doorGroup.rotation.y, -Math.PI / 2, 0.1);
+        if (doorGroup.rotation.y <= -Math.PI / 2 + 0.01) {
+          doorGroup.rotation.y = -Math.PI / 2;
+          doorState = 'open';
+        }
+      } else if (doorState === 'closing') {
+        doorGroup.rotation.y = THREE.MathUtils.lerp(doorGroup.rotation.y, 0, 0.1);
+        if (doorGroup.rotation.y >= -0.01) {
+          doorGroup.rotation.y = 0;
+          doorState = 'closed';
+        }
+      }
+
       renderer.render(scene, camera);
       if (bubble.style.display !== 'none') updateBubblePosition();
     }
