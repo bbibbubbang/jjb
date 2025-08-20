@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>찜질방 경영게임</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+    }
+    #top-bar {
+      background: #ffcc66;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+    }
+    #content {
+      flex: 1;
+      position: relative;
+    }
+    #game {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #bubble {
+      position: absolute;
+      display: none;
+      padding: 5px 10px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    #map-toggle {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      font-size: 18px;
+      background: #ff9966;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+    }
+    #map-menu {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.95);
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      display: none;
+      flex-wrap: wrap;
+      width: 90%;
+      max-width: 400px;
+      justify-content: space-around;
+    }
+    #map-menu button {
+      margin: 5px;
+      flex: 1 1 40%;
+      padding: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div id="top-bar">
+    <div>💰 <span id="money">0</span></div>
+    <div>😊 <span id="satisfaction">0</span></div>
+  </div>
+  <div id="content">
+    <canvas id="game"></canvas>
+    <div id="bubble">🔑</div>
+  </div>
+  <button id="map-toggle">맵</button>
+  <div id="map-menu">
+    <button data-room="카운터">카운터</button>
+    <button data-room="탈의실">탈의실</button>
+    <button data-room="목욕탕">목욕탕</button>
+    <button data-room="홀">홀</button>
+    <button data-room="온찜질방">온찜질방</button>
+    <button data-room="냉찜질방">냉찜질방</button>
+  </div>
+  <script>
+    const mapToggle = document.getElementById('map-toggle');
+    const mapMenu = document.getElementById('map-menu');
+    const moneyEl = document.getElementById('money');
+    let money = 0;
+
+    mapToggle.addEventListener('click', () => {
+      if (mapMenu.style.display === 'flex') {
+        mapMenu.style.display = 'none';
+        mapToggle.textContent = '맵';
+      } else {
+        mapMenu.style.display = 'flex';
+        mapToggle.textContent = '닫기';
+      }
+    });
+
+    mapMenu.addEventListener('click', (e) => {
+      if (e.target.tagName === 'BUTTON') {
+        const room = e.target.getAttribute('data-room');
+        // room change can be handled here
+        mapMenu.style.display = 'none';
+        mapToggle.textContent = '맵';
+      }
+    });
+
+    // --- 3D Scene ---
+    const canvas = document.getElementById('game');
+    const bubble = document.getElementById('bubble');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+    // First-person view from behind the counter
+    camera.position.set(0, 1.6, -1);
+    camera.lookAt(0, 1, 10);
+
+    const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+    scene.add(ambient);
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(50, 50),
+      new THREE.MeshBasicMaterial({ color: 0xdddddd })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    scene.add(floor);
+
+    const counter = new THREE.Mesh(
+      new THREE.BoxGeometry(3, 1, 1),
+      new THREE.MeshBasicMaterial({ color: 0xffcc66 })
+    );
+    counter.position.set(0, 0.5, 0);
+    scene.add(counter);
+
+    // Door setup (sliding panels)
+    const doorGroup = new THREE.Group();
+    const doorZ = 10;
+    doorGroup.position.set(0, 1, doorZ);
+
+    const leftDoor = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 2, 0.1),
+      new THREE.MeshBasicMaterial({ color: 0x996633 })
+    );
+    leftDoor.position.set(-0.25, 0, 0);
+
+    const rightDoor = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 2, 0.1),
+      new THREE.MeshBasicMaterial({ color: 0x996633 })
+    );
+    rightDoor.position.set(0.25, 0, 0);
+
+    doorGroup.add(leftDoor);
+    doorGroup.add(rightDoor);
+    scene.add(doorGroup);
+
+    const leftClosedX = -0.25;
+    const rightClosedX = 0.25;
+    const leftOpenX = -0.75;
+    const rightOpenX = 0.75;
+
+    // Customer setup (simple human figure)
+    const gender = Math.random() < 0.5 ? 'male' : 'female';
+    const bodyColor = gender === 'male' ? 0x6699ff : 0xff6699;
+
+    const customer = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.25, 0.25, 1),
+      new THREE.MeshBasicMaterial({ color: bodyColor })
+    );
+    body.position.y = 0.5;
+
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.25),
+      new THREE.MeshBasicMaterial({ color: 0xffccaa })
+    );
+    head.position.y = 1.25;
+
+    // Arms
+    const armGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.6);
+    const leftArm = new THREE.Mesh(armGeom, new THREE.MeshBasicMaterial({ color: bodyColor }));
+    leftArm.rotation.z = Math.PI / 2;
+    leftArm.position.set(-0.35, 0.5, 0);
+    const rightArm = leftArm.clone();
+    rightArm.position.x = 0.35;
+
+    // Legs
+    const legGeom = new THREE.CylinderGeometry(0.07, 0.07, 0.8);
+    const leftLeg = new THREE.Mesh(legGeom, new THREE.MeshBasicMaterial({ color: bodyColor }));
+    leftLeg.position.set(-0.1, -0.4, 0);
+    const rightLeg = leftLeg.clone();
+    rightLeg.position.x = 0.1;
+
+    // Face
+    const eyeGeom = new THREE.SphereGeometry(0.03);
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const leftEye = new THREE.Mesh(eyeGeom, eyeMat);
+    leftEye.position.set(-0.07, 1.33, 0.22);
+    const rightEye = leftEye.clone();
+    rightEye.position.x = 0.07;
+    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.02), new THREE.MeshBasicMaterial({ color: 0xffccaa }));
+    nose.position.set(0, 1.28, 0.24);
+    const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.02, 0.01), new THREE.MeshBasicMaterial({ color: 0xff6666 }));
+    mouth.position.set(0, 1.23, 0.22);
+
+    customer.add(body);
+    customer.add(head);
+    customer.add(leftArm);
+    customer.add(rightArm);
+    customer.add(leftLeg);
+    customer.add(rightLeg);
+    customer.add(leftEye);
+    customer.add(rightEye);
+    customer.add(nose);
+    customer.add(mouth);
+
+    customer.position.set(0, 0, 20);
+    scene.add(customer);
+
+    bubble.addEventListener('click', () => {
+      money += 100;
+      moneyEl.textContent = money;
+      bubble.style.display = 'none';
+      phase = 'leave';
+      moving = true;
+    });
+
+    function updateBubblePosition() {
+      const vector = customer.position.clone().add(new THREE.Vector3(0, 1, 0));
+      vector.project(camera);
+      const x = (vector.x * 0.5 + 0.5) * canvas.clientWidth;
+      const y = (-vector.y * 0.5 + 0.5) * canvas.clientHeight;
+      bubble.style.left = `${x - bubble.offsetWidth / 2}px`;
+      bubble.style.top = `${y - bubble.offsetHeight - 10}px`;
+    }
+
+    let moving = true;
+    let phase = 'approach';
+    let doorState = 'closed';
+    let doorPassed = false;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+        if (moving) {
+          if (phase === 'approach') {
+            customer.position.z -= 0.02;
+            if (!doorPassed && customer.position.z <= doorZ + 2 && doorState === 'closed') {
+              doorState = 'opening';
+            }
+            if (!doorPassed && customer.position.z <= doorZ - 2 && doorState === 'open') {
+              doorState = 'closing';
+              doorPassed = true;
+            }
+            if (customer.position.z <= 1) {
+              moving = false;
+              bubble.style.display = 'block';
+              updateBubblePosition();
+            }
+          } else if (phase === 'leave') {
+            const dir = gender === 'male' ? -0.02 : 0.02;
+            customer.position.x += dir;
+            if (Math.abs(customer.position.x) > 5) {
+              scene.remove(customer);
+              moving = false;
+            }
+          }
+        }
+
+      if (doorState === 'opening') {
+        leftDoor.position.x = THREE.MathUtils.lerp(leftDoor.position.x, leftOpenX, 0.1);
+        rightDoor.position.x = THREE.MathUtils.lerp(rightDoor.position.x, rightOpenX, 0.1);
+        if (Math.abs(leftDoor.position.x - leftOpenX) < 0.01) {
+          leftDoor.position.x = leftOpenX;
+          rightDoor.position.x = rightOpenX;
+          doorState = 'open';
+        }
+      } else if (doorState === 'closing') {
+        leftDoor.position.x = THREE.MathUtils.lerp(leftDoor.position.x, leftClosedX, 0.1);
+        rightDoor.position.x = THREE.MathUtils.lerp(rightDoor.position.x, rightClosedX, 0.1);
+        if (Math.abs(leftDoor.position.x - leftClosedX) < 0.01) {
+          leftDoor.position.x = leftClosedX;
+          rightDoor.position.x = rightClosedX;
+          doorState = 'closed';
+        }
+      }
+
+      renderer.render(scene, camera);
+      if (bubble.style.display !== 'none') updateBubblePosition();
+    }
+    animate();
+  </script>
+</body>
+</html>
