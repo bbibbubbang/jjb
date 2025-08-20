@@ -100,6 +100,8 @@
     const mapMenu = document.getElementById('map-menu');
     const moneyEl = document.getElementById('money');
     let money = 0;
+    // Track objects that should remain visible on the map
+    const mapObjects = [];
 
     mapToggle.addEventListener('click', () => {
       if (mapMenu.style.display === 'flex') {
@@ -109,6 +111,8 @@
         mapMenu.style.display = 'flex';
         mapToggle.textContent = '닫기';
       }
+      // Ensure map objects are visible whenever the map is toggled
+      mapObjects.forEach((obj) => (obj.visible = true));
     });
 
     mapMenu.addEventListener('click', (e) => {
@@ -141,6 +145,7 @@
     );
     floor.rotation.x = -Math.PI / 2;
     scene.add(floor);
+    mapObjects.push(floor);
 
     const counter = new THREE.Mesh(
       new THREE.BoxGeometry(3, 1, 1),
@@ -148,6 +153,7 @@
     );
     counter.position.set(0, 0.5, 0);
     scene.add(counter);
+    mapObjects.push(counter);
 
     // Door setup (sliding panels)
     const doorGroup = new THREE.Group();
@@ -169,6 +175,7 @@
     doorGroup.add(leftDoor);
     doorGroup.add(rightDoor);
     scene.add(doorGroup);
+    mapObjects.push(doorGroup);
 
     const leftClosedX = -0.25;
     const rightClosedX = 0.25;
@@ -180,6 +187,7 @@
     const customer = new THREE.Group();
     customer.position.set(0, 0, 20);
     scene.add(customer);
+    mapObjects.push(customer);
 
     let mixer, walkAction, idleAction, activeAction;
     const loader = new THREE.GLTFLoader();
