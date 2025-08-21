@@ -182,7 +182,17 @@
     customer.position.set(0, 0, 20);
     scene.add(customer);
     let mixer;
-    if (THREE.GLTFLoader) {
+
+    function addFallbackModel() {
+      const fallbackBody = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 1.7, 0.5),
+        new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+      );
+      fallbackBody.position.y = 0.85;
+      customer.add(fallbackBody);
+    }
+
+    try {
       const loader = new THREE.GLTFLoader();
       const modelUrl = new URL('./Unity/Assets/StreamingAssets/models/output.glb', window.location.href);
       loader.load(
@@ -201,15 +211,12 @@
         undefined,
         (err) => {
           console.error('Failed to load model', err);
+          addFallbackModel();
         }
       );
-    } else {
-      const fallbackBody = new THREE.Mesh(
-        new THREE.BoxGeometry(0.5, 1.7, 0.5),
-        new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-      );
-      fallbackBody.position.y = 0.85;
-      customer.add(fallbackBody);
+    } catch (e) {
+      console.error('GLTFLoader not available', e);
+      addFallbackModel();
     }
 
     bubble.addEventListener('click', () => {
