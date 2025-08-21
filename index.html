@@ -182,7 +182,8 @@
     scene.add(customer);
     let mixer;
     const loader = new THREE.GLTFLoader();
-    loader.load('Unity/Assets/StreamingAssets/models/output.glb', (gltf) => {
+    const modelUrl = new URL('./Unity/Assets/StreamingAssets/models/output.glb', window.location.href);
+    loader.load(modelUrl.href, (gltf) => {
       scene.remove(customer);
       customer = gltf.scene;
       customer.position.set(0, 0, 20);
