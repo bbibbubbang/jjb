@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>찜질방 경영게임</title>
   <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/GLTFLoader.js"></script>
   <style>
     body, html {
       margin: 0;
@@ -126,6 +127,7 @@
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+    const clock = new THREE.Clock();
     // First-person view from behind the counter
     camera.position.set(0, 1.6, -1);
     camera.lookAt(0, 1, 10);
@@ -173,63 +175,24 @@
     const leftOpenX = -0.75;
     const rightOpenX = 0.75;
 
-    // Customer setup (simple human figure)
+    // Customer setup using GLB model
     const gender = Math.random() < 0.5 ? 'male' : 'female';
-    const bodyColor = gender === 'male' ? 0x6699ff : 0xff6699;
-
-    const customer = new THREE.Group();
-    const body = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.25, 0.25, 1),
-      new THREE.MeshBasicMaterial({ color: bodyColor })
-    );
-    body.position.y = 0.5;
-
-    const head = new THREE.Mesh(
-      new THREE.SphereGeometry(0.25),
-      new THREE.MeshBasicMaterial({ color: 0xffccaa })
-    );
-    head.position.y = 1.25;
-
-    // Arms
-    const armGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.6);
-    const leftArm = new THREE.Mesh(armGeom, new THREE.MeshBasicMaterial({ color: bodyColor }));
-    leftArm.rotation.z = Math.PI / 2;
-    leftArm.position.set(-0.35, 0.5, 0);
-    const rightArm = leftArm.clone();
-    rightArm.position.x = 0.35;
-
-    // Legs
-    const legGeom = new THREE.CylinderGeometry(0.07, 0.07, 0.8);
-    const leftLeg = new THREE.Mesh(legGeom, new THREE.MeshBasicMaterial({ color: bodyColor }));
-    leftLeg.position.set(-0.1, -0.4, 0);
-    const rightLeg = leftLeg.clone();
-    rightLeg.position.x = 0.1;
-
-    // Face
-    const eyeGeom = new THREE.SphereGeometry(0.03);
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const leftEye = new THREE.Mesh(eyeGeom, eyeMat);
-    leftEye.position.set(-0.07, 1.33, 0.22);
-    const rightEye = leftEye.clone();
-    rightEye.position.x = 0.07;
-    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.02), new THREE.MeshBasicMaterial({ color: 0xffccaa }));
-    nose.position.set(0, 1.28, 0.24);
-    const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.02, 0.01), new THREE.MeshBasicMaterial({ color: 0xff6666 }));
-    mouth.position.set(0, 1.23, 0.22);
-
-    customer.add(body);
-    customer.add(head);
-    customer.add(leftArm);
-    customer.add(rightArm);
-    customer.add(leftLeg);
-    customer.add(rightLeg);
-    customer.add(leftEye);
-    customer.add(rightEye);
-    customer.add(nose);
-    customer.add(mouth);
-
+    let customer = new THREE.Group();
     customer.position.set(0, 0, 20);
     scene.add(customer);
+    let mixer;
+    const loader = new THREE.GLTFLoader();
+    loader.load('Unity/Assets/StreamingAssets/models/output.glb', (gltf) => {
+      scene.remove(customer);
+      customer = gltf.scene;
+      customer.position.set(0, 0, 20);
+      scene.add(customer);
+      mixer = new THREE.AnimationMixer(customer);
+      if (gltf.animations && gltf.animations.length > 0) {
+        const action = mixer.clipAction(gltf.animations[0]);
+        action.play();
+      }
+    });
 
     bubble.addEventListener('click', () => {
       money += 100;
@@ -255,6 +218,8 @@
 
     function animate() {
       requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      if (mixer) mixer.update(delta);
 
         if (moving) {
           if (phase === 'approach') {
