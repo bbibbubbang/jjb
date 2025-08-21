@@ -182,19 +182,35 @@
     customer.position.set(0, 0, 20);
     scene.add(customer);
     let mixer;
-    const loader = new THREE.GLTFLoader();
-    const modelUrl = new URL('./Unity/Assets/StreamingAssets/models/output.glb', window.location.href);
-    loader.load(modelUrl.href, (gltf) => {
-      scene.remove(customer);
-      customer = gltf.scene;
-      customer.position.set(0, 0, 20);
-      scene.add(customer);
-      mixer = new THREE.AnimationMixer(customer);
-      if (gltf.animations && gltf.animations.length > 0) {
-        const action = mixer.clipAction(gltf.animations[0]);
-        action.play();
-      }
-    });
+    if (THREE.GLTFLoader) {
+      const loader = new THREE.GLTFLoader();
+      const modelUrl = new URL('./Unity/Assets/StreamingAssets/models/output.glb', window.location.href);
+      loader.load(
+        modelUrl.href,
+        (gltf) => {
+          scene.remove(customer);
+          customer = gltf.scene;
+          customer.position.set(0, 0, 20);
+          scene.add(customer);
+          mixer = new THREE.AnimationMixer(customer);
+          if (gltf.animations && gltf.animations.length > 0) {
+            const action = mixer.clipAction(gltf.animations[0]);
+            action.play();
+          }
+        },
+        undefined,
+        (err) => {
+          console.error('Failed to load model', err);
+        }
+      );
+    } else {
+      const fallbackBody = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 1.7, 0.5),
+        new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+      );
+      fallbackBody.position.y = 0.85;
+      customer.add(fallbackBody);
+    }
 
     bubble.addEventListener('click', () => {
       money += 100;
