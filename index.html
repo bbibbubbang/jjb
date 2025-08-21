@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>찜질방 경영게임</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/GLTFLoader.js"></script>
   <style>
     body, html {
       margin: 0;
@@ -103,7 +101,9 @@
     <button data-room="온찜질방">온찜질방</button>
     <button data-room="냉찜질방">냉찜질방</button>
   </div>
-  <script>
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/loaders/GLTFLoader.js';
     const mapToggle = document.getElementById('map-toggle');
     const mapMenu = document.getElementById('map-menu');
     const moneyEl = document.getElementById('money');
@@ -202,7 +202,7 @@
     }
 
     try {
-      const loader = new THREE.GLTFLoader();
+      const loader = new GLTFLoader();
       const modelUrl = new URL('./Unity/Assets/StreamingAssets/models/output.glb', window.location.href);
       loader.load(
         modelUrl.href,
