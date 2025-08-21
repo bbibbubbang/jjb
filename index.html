@@ -24,6 +24,13 @@
       align-items: center;
       font-size: 18px;
     }
+    #error-message {
+      background: #ffdddd;
+      color: #a00;
+      padding: 10px;
+      text-align: center;
+      display: none;
+    }
     #content {
       flex: 1;
       position: relative;
@@ -78,6 +85,7 @@
   </style>
 </head>
 <body>
+  <div id="error-message"></div>
   <div id="top-bar">
     <div>💰 <span id="money">0</span></div>
     <div>😊 <span id="satisfaction">0</span></div>
@@ -99,6 +107,7 @@
     const mapToggle = document.getElementById('map-toggle');
     const mapMenu = document.getElementById('map-menu');
     const moneyEl = document.getElementById('money');
+    const errorMessage = document.getElementById('error-message');
     let money = 0;
 
     mapToggle.addEventListener('click', () => {
@@ -211,11 +220,20 @@
         undefined,
         (err) => {
           console.error('Failed to load model', err);
+          console.log('Model URL:', modelUrl.href);
           addFallbackModel();
+          if (errorMessage) {
+            errorMessage.textContent = '모델을 불러오지 못해 기본 모델을 사용합니다.';
+            errorMessage.style.display = 'block';
+          }
         }
       );
     } catch (e) {
       console.error('GLTFLoader not available', e);
+      if (errorMessage) {
+        errorMessage.textContent = '모델을 불러오지 못해 기본 모델을 사용합니다.';
+        errorMessage.style.display = 'block';
+      }
       addFallbackModel();
     }
 
