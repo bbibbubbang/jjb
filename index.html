@@ -247,6 +247,10 @@
     customer.position.set(0, 0, 20);
     scene.add(customer);
     let mixer;
+    let baseY = 0;
+    let walkTime = 0;
+    const walkSpeed = 6;
+    const walkAmplitude = 0.1;
 
     function addFallbackModel() {
       const fallbackBody = new THREE.Mesh(
@@ -268,6 +272,7 @@
           customer.updateMatrixWorld(true);
           const bbox = new THREE.Box3().setFromObject(customer);
           customer.position.set(0, -bbox.min.y, 20);
+          baseY = customer.position.y;
           scene.add(customer);
           mixer = new THREE.AnimationMixer(customer);
           if (gltf.animations && gltf.animations.length > 0) {
@@ -329,6 +334,8 @@
       if (mixer) mixer.update(delta);
 
         if (moving) {
+          walkTime += delta * walkSpeed;
+          customer.position.y = baseY + Math.abs(Math.sin(walkTime)) * walkAmplitude;
           if (phase === 'approach') {
             customer.position.z -= 0.02;
             if (!doorPassed && customer.position.z <= doorZ + 2 && doorState === 'closed') {
@@ -351,6 +358,9 @@
               moving = false;
             }
           }
+        } else {
+          customer.position.y = baseY;
+          walkTime = 0;
         }
 
       if (doorState === 'opening') {
