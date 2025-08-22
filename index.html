@@ -160,15 +160,23 @@
       }
     });
   </script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js",
+        "three/examples/": "https://cdn.jsdelivr.net/npm/three@0.150.1/examples/"
+      }
+    }
+  </script>
 
-    <script type="module">
-      async function init() {
+  <script type="module">
+    async function init() {
       const moneyEl = document.getElementById('money');
       const errorMessage = document.getElementById('error-message');
       let THREE, GLTFLoader;
       try {
-        THREE = await import('https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js');
-        ({ GLTFLoader } = await import('https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/loaders/GLTFLoader.js'));
+        THREE = await import('three');
+        ({ GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js'));
       } catch (e) {
         console.error('3D libraries failed to load', e);
         if (errorMessage) {
