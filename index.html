@@ -126,25 +126,22 @@
   </div>
   <button id="log-toggle">로그</button>
   <div id="log-output"></div>
-  <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js';
-    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/loaders/GLTFLoader.js?module';
+  <script>
     const mapToggle = document.getElementById('map-toggle');
     const mapMenu = document.getElementById('map-menu');
-    const moneyEl = document.getElementById('money');
-    const errorMessage = document.getElementById('error-message');
     const logToggle = document.getElementById('log-toggle');
     const logOutput = document.getElementById('log-output');
+
     const originalConsoleError = console.error;
     console.error = (...args) => {
       originalConsoleError.apply(console, args);
       logOutput.textContent += args.join(' ') + '\n';
     };
+
     logToggle.addEventListener('click', () => {
       logOutput.style.display =
         logOutput.style.display === 'block' ? 'none' : 'block';
     });
-    let money = 0;
 
     mapToggle.addEventListener('click', () => {
       if (mapMenu.style.display === 'flex') {
@@ -158,14 +155,29 @@
 
     mapMenu.addEventListener('click', (e) => {
       if (e.target.tagName === 'BUTTON') {
-        const room = e.target.getAttribute('data-room');
-        // room change can be handled here
         mapMenu.style.display = 'none';
         mapToggle.textContent = '맵';
       }
     });
+  </script>
 
-    // --- 3D Scene ---
+    <script type="module">
+      async function init() {
+      const moneyEl = document.getElementById('money');
+      const errorMessage = document.getElementById('error-message');
+      let THREE, GLTFLoader;
+      try {
+        THREE = await import('https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js');
+        ({ GLTFLoader } = await import('https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/loaders/GLTFLoader.js'));
+      } catch (e) {
+        console.error('3D libraries failed to load', e);
+        if (errorMessage) {
+          errorMessage.textContent = '3D 라이브러리를 불러오지 못했습니다.';
+          errorMessage.style.display = 'block';
+        }
+        return;
+      }
+
     const canvas = document.getElementById('game');
     const bubble = document.getElementById('bubble');
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -174,7 +186,6 @@
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
     const clock = new THREE.Clock();
-    // First-person view from behind the counter
     camera.position.set(0, 1.6, -1);
     camera.lookAt(0, 1, 10);
 
@@ -195,7 +206,6 @@
     counter.position.set(0, 0.5, 0);
     scene.add(counter);
 
-    // Door setup (sliding panels)
     const doorGroup = new THREE.Group();
     const doorZ = 10;
     doorGroup.position.set(0, 1, doorZ);
@@ -353,6 +363,8 @@
       if (bubble.style.display !== 'none') updateBubblePosition();
     }
     animate();
+  }
+  init();
   </script>
 </body>
 </html>
