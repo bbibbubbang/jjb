@@ -284,7 +284,11 @@
 
           if (gltf.animations && gltf.animations.length > 0) {
             mixer = new THREE.AnimationMixer(customer);
-            const action = mixer.clipAction(gltf.animations[0]);
+            // Prefer an animation clip with "walk" in its name. If none exists,
+            // fall back to the first available animation.
+            let clip = gltf.animations.find((a) => /walk/i.test(a.name));
+            if (!clip) clip = gltf.animations[0];
+            const action = mixer.clipAction(clip);
             action.play();
           }
         },
