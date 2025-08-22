@@ -120,12 +120,12 @@
     });
 
     // --- 3D Scene ---
-    const canvas = document.getElementById('game');
-    const bubble = document.getElementById('bubble');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+const canvas = document.getElementById('game');
+const bubble = document.getElementById('bubble');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
     // First-person view from behind the counter
     camera.position.set(0, 1.6, -1);
     camera.lookAt(0, 1, 10);
@@ -168,21 +168,21 @@
     doorGroup.add(rightDoor);
     scene.add(doorGroup);
 
-    const leftClosedX = -0.25;
-    const rightClosedX = 0.25;
-    const leftOpenX = -0.75;
-    const rightOpenX = 0.75;
+const leftClosedX = -0.25;
+const rightClosedX = 0.25;
+const leftOpenX = -0.75;
+const rightOpenX = 0.75;
 
-    // Customer setup (simple human figure)
-    const gender = Math.random() < 0.5 ? 'male' : 'female';
-    const bodyColor = gender === 'male' ? 0x6699ff : 0xff6699;
+// Customer setup (simple human figure)
+const gender = Math.random() < 0.5 ? 'male' : 'female';
+const bodyColor = gender === 'male' ? 0x6699ff : 0xff6699;
 
-    const customer = new THREE.Group();
-    const body = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.25, 0.25, 1),
-      new THREE.MeshBasicMaterial({ color: bodyColor })
-    );
-    body.position.y = 0.5;
+const customer = new THREE.Group();
+const body = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.25, 0.25, 1),
+  new THREE.MeshBasicMaterial({ color: bodyColor })
+);
+body.position.y = 0.5;
 
     const head = new THREE.Mesh(
       new THREE.SphereGeometry(0.25),
@@ -198,12 +198,18 @@
     const rightArm = leftArm.clone();
     rightArm.position.x = 0.35;
 
-    // Legs
-    const legGeom = new THREE.CylinderGeometry(0.07, 0.07, 0.8);
-    const leftLeg = new THREE.Mesh(legGeom, new THREE.MeshBasicMaterial({ color: bodyColor }));
-    leftLeg.position.set(-0.1, -0.4, 0);
-    const rightLeg = leftLeg.clone();
-    rightLeg.position.x = 0.1;
+// Legs
+const legGeom = new THREE.CylinderGeometry(0.07, 0.07, 0.8);
+const leftLeg = new THREE.Group();
+const leftLegMesh = new THREE.Mesh(legGeom, new THREE.MeshBasicMaterial({ color: bodyColor }));
+leftLegMesh.position.y = -0.4;
+leftLeg.add(leftLegMesh);
+leftLeg.position.set(-0.1, 0, 0);
+const rightLeg = new THREE.Group();
+const rightLegMesh = new THREE.Mesh(legGeom, new THREE.MeshBasicMaterial({ color: bodyColor }));
+rightLegMesh.position.y = -0.4;
+rightLeg.add(rightLegMesh);
+rightLeg.position.set(0.1, 0, 0);
 
     // Face
     const eyeGeom = new THREE.SphereGeometry(0.03);
@@ -221,70 +227,81 @@
     customer.add(head);
     customer.add(leftArm);
     customer.add(rightArm);
-    customer.add(leftLeg);
-    customer.add(rightLeg);
+customer.add(leftLeg);
+customer.add(rightLeg);
     customer.add(leftEye);
     customer.add(rightEye);
     customer.add(nose);
     customer.add(mouth);
 
-    customer.position.set(0, 0, 20);
-    scene.add(customer);
+customer.position.set(0, 0, 20);
+scene.add(customer);
+let moving = true;
+let phase = 'approach';
+let doorState = 'closed';
+let doorPassed = false;
+let walkTimer = 0;
+const walkDuration = 0.6;
+const clock = new THREE.Clock();
 
-    bubble.addEventListener('click', () => {
-      money += 100;
-      moneyEl.textContent = money;
-      bubble.style.display = 'none';
-      phase = 'leave';
-      moving = true;
-    });
+function updateProceduralWalk(delta) {
+  walkTimer += delta;
+  const phase = (walkTimer % walkDuration) / walkDuration;
+  const angle = Math.sin(phase * Math.PI * 2) * 0.5;
+  leftLeg.rotation.x = angle;
+  rightLeg.rotation.x = -angle;
+}
 
-    function updateBubblePosition() {
-      const vector = customer.position.clone().add(new THREE.Vector3(0, 1, 0));
-      vector.project(camera);
-      const x = (vector.x * 0.5 + 0.5) * canvas.clientWidth;
-      const y = (-vector.y * 0.5 + 0.5) * canvas.clientHeight;
-      bubble.style.left = `${x - bubble.offsetWidth / 2}px`;
-      bubble.style.top = `${y - bubble.offsetHeight - 10}px`;
+bubble.addEventListener('click', () => {
+  money += 100;
+  moneyEl.textContent = money;
+  bubble.style.display = 'none';
+  phase = 'leave';
+  moving = true;
+});
+
+function updateBubblePosition() {
+  const vector = customer.position.clone().add(new THREE.Vector3(0, 1, 0));
+  vector.project(camera);
+  const x = (vector.x * 0.5 + 0.5) * canvas.clientWidth;
+  const y = (-vector.y * 0.5 + 0.5) * canvas.clientHeight;
+  bubble.style.left = `${x - bubble.offsetWidth / 2}px`;
+  bubble.style.top = `${y - bubble.offsetHeight - 10}px`;
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  if (moving) {
+    updateProceduralWalk(delta);
+    if (phase === 'approach') {
+      customer.position.z -= 0.02;
+      if (!doorPassed && customer.position.z <= doorZ + 2 && doorState === 'closed') {
+        doorState = 'opening';
+      }
+      if (!doorPassed && customer.position.z <= doorZ - 2 && doorState === 'open') {
+        doorState = 'closing';
+        doorPassed = true;
+      }
+      if (customer.position.z <= 1) {
+        moving = false;
+        bubble.style.display = 'block';
+        updateBubblePosition();
+      }
+    } else if (phase === 'leave') {
+      const dir = gender === 'male' ? -0.02 : 0.02;
+      customer.position.x += dir;
+      if (Math.abs(customer.position.x) > 5) {
+        scene.remove(customer);
+        moving = false;
+      }
     }
+  }
 
-    let moving = true;
-    let phase = 'approach';
-    let doorState = 'closed';
-    let doorPassed = false;
-
-    function animate() {
-      requestAnimationFrame(animate);
-
-        if (moving) {
-          if (phase === 'approach') {
-            customer.position.z -= 0.02;
-            if (!doorPassed && customer.position.z <= doorZ + 2 && doorState === 'closed') {
-              doorState = 'opening';
-            }
-            if (!doorPassed && customer.position.z <= doorZ - 2 && doorState === 'open') {
-              doorState = 'closing';
-              doorPassed = true;
-            }
-            if (customer.position.z <= 1) {
-              moving = false;
-              bubble.style.display = 'block';
-              updateBubblePosition();
-            }
-          } else if (phase === 'leave') {
-            const dir = gender === 'male' ? -0.02 : 0.02;
-            customer.position.x += dir;
-            if (Math.abs(customer.position.x) > 5) {
-              scene.remove(customer);
-              moving = false;
-            }
-          }
-        }
-
-      if (doorState === 'opening') {
-        leftDoor.position.x = THREE.MathUtils.lerp(leftDoor.position.x, leftOpenX, 0.1);
-        rightDoor.position.x = THREE.MathUtils.lerp(rightDoor.position.x, rightOpenX, 0.1);
-        if (Math.abs(leftDoor.position.x - leftOpenX) < 0.01) {
+  if (doorState === 'opening') {
+    leftDoor.position.x = THREE.MathUtils.lerp(leftDoor.position.x, leftOpenX, 0.1);
+    rightDoor.position.x = THREE.MathUtils.lerp(rightDoor.position.x, rightOpenX, 0.1);
+    if (Math.abs(leftDoor.position.x - leftOpenX) < 0.01) {
           leftDoor.position.x = leftOpenX;
           rightDoor.position.x = rightOpenX;
           doorState = 'open';
