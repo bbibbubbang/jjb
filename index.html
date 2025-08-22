@@ -252,12 +252,43 @@
     const walkDuration = 0.6;
 
     function addFallbackModel() {
-      const fallbackBody = new THREE.Mesh(
-        new THREE.BoxGeometry(0.5, 1.7, 0.5),
-        new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-      );
-      fallbackBody.position.y = 0.85;
-      customer.add(fallbackBody);
+      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.0, 0.3), material);
+      torso.position.y = 1.4;
+      customer.add(torso);
+
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), material);
+      head.position.y = 2.1;
+      customer.add(head);
+
+      function createLeg(isLeft) {
+        const root = new THREE.Group();
+        const upper = new THREE.Group();
+        const upperMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.2), material);
+        upperMesh.position.y = -0.3;
+        upper.add(upperMesh);
+        root.add(upper);
+        upper.position.set(isLeft ? -0.15 : 0.15, 0.8, 0);
+
+        const lower = new THREE.Group();
+        const lowerMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.2), material);
+        lowerMesh.position.y = -0.3;
+        lower.position.y = -0.6;
+        lower.add(lowerMesh);
+        upper.add(lower);
+
+        return { root, upper, lower };
+      }
+
+      const leftLeg = createLeg(true);
+      const rightLeg = createLeg(false);
+      leftUpperLeg = leftLeg.upper;
+      rightUpperLeg = rightLeg.upper;
+      leftLowerLeg = leftLeg.lower;
+      rightLowerLeg = rightLeg.lower;
+      customer.add(leftLeg.root);
+      customer.add(rightLeg.root);
     }
 
     try {
