@@ -247,6 +247,9 @@
     customer.position.set(0, 0, 20);
     scene.add(customer);
     let mixer;
+    let leftUpperLeg, rightUpperLeg, leftLowerLeg, rightLowerLeg;
+    let walkTimer = 0;
+    const walkDuration = 0.6;
 
     function addFallbackModel() {
       const fallbackBody = new THREE.Mesh(
@@ -269,8 +272,18 @@
           const bbox = new THREE.Box3().setFromObject(customer);
           customer.position.set(0, -bbox.min.y, 20);
           scene.add(customer);
-          mixer = new THREE.AnimationMixer(customer);
+
+          customer.traverse((child) => {
+            if (!child.isBone) return;
+            const n = child.name.toLowerCase();
+            if (!leftUpperLeg && n.includes('left') && (n.includes('thigh') || n.includes('upleg'))) leftUpperLeg = child;
+            if (!rightUpperLeg && n.includes('right') && (n.includes('thigh') || n.includes('upleg'))) rightUpperLeg = child;
+            if (!leftLowerLeg && n.includes('left') && (n.includes('shin') || n.includes('leg'))) leftLowerLeg = child;
+            if (!rightLowerLeg && n.includes('right') && (n.includes('shin') || n.includes('leg'))) rightLowerLeg = child;
+          });
+
           if (gltf.animations && gltf.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(customer);
             const action = mixer.clipAction(gltf.animations[0]);
             action.play();
           }
@@ -293,6 +306,17 @@
         errorMessage.style.display = 'block';
       }
       addFallbackModel();
+    }
+
+    function updateProceduralWalk(delta) {
+      if (!leftUpperLeg || !rightUpperLeg) return;
+      walkTimer += delta;
+      const phase = (walkTimer % walkDuration) / walkDuration;
+      const angle = Math.sin(phase * Math.PI * 2) * 0.4;
+      leftUpperLeg.rotation.x = angle;
+      rightUpperLeg.rotation.x = -angle;
+      if (leftLowerLeg) leftLowerLeg.rotation.x = Math.max(0, -angle);
+      if (rightLowerLeg) rightLowerLeg.rotation.x = Math.max(0, angle);
     }
 
     bubble.addEventListener('click', () => {
@@ -326,7 +350,11 @@
     function animate() {
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
-      if (mixer) mixer.update(delta);
+      if (mixer) {
+        mixer.update(delta);
+      } else {
+        updateProceduralWalk(delta);
+      }
 
         if (moving) {
           if (phase === 'approach') {
