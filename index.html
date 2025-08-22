@@ -173,6 +173,8 @@
     async function init() {
       const moneyEl = document.getElementById('money');
       const errorMessage = document.getElementById('error-message');
+      let money = 0;
+      let satisfaction = 0;
       let THREE, GLTFLoader;
       try {
         THREE = await import('three');
@@ -263,7 +265,9 @@
         (gltf) => {
           scene.remove(customer);
           customer = gltf.scene;
-          customer.position.set(0, 0, 20);
+          customer.updateMatrixWorld(true);
+          const bbox = new THREE.Box3().setFromObject(customer);
+          customer.position.set(0, -bbox.min.y, 20);
           scene.add(customer);
           mixer = new THREE.AnimationMixer(customer);
           if (gltf.animations && gltf.animations.length > 0) {
