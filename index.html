@@ -308,6 +308,10 @@
           scene.add(customer);
 
           customer.traverse((child) => {
+            if (child.isMesh && child.material) {
+              child.material.transparent = false;
+              child.material.opacity = 1;
+            }
             if (!child.isBone) return;
             const n = child.name.toLowerCase();
             if (!leftUpperLeg && n.includes('left') && (n.includes('thigh') || n.includes('upleg'))) leftUpperLeg = child;
