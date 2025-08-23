@@ -292,7 +292,9 @@
     }
 
     try {
-      const modelUrl = new URL('./Unity/Assets/StreamingAssets/models/Venti_-_Norinde_4.4.blend', window.location.href);
+      // Use a lightweight GLTF file instead of the original Blender file which
+      // caused JSON parsing errors when loaded with GLTFLoader.
+      const modelUrl = new URL('./Unity/Assets/StreamingAssets/models/triangle.gltf', window.location.href);
       const loader = new GLTFLoader();
       loader.load(
         modelUrl.href,
