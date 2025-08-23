@@ -291,63 +291,9 @@
       customer.add(rightLeg.root);
     }
 
-    try {
-      // Use a lightweight GLTF file instead of the original Blender file which
-      // caused JSON parsing errors when loaded with GLTFLoader.
-      const modelUrl = new URL('./Unity/Assets/StreamingAssets/models/triangle.gltf', window.location.href);
-      const loader = new GLTFLoader();
-      loader.load(
-        modelUrl.href,
-        (model) => {
-          const obj = model.scene || model;
-          scene.remove(customer);
-          customer = obj;
-          customer.updateMatrixWorld && customer.updateMatrixWorld(true);
-          const bbox = new THREE.Box3().setFromObject(customer);
-          customer.position.set(0, -bbox.min.y, 20);
-          scene.add(customer);
-
-          customer.traverse((child) => {
-            if (child.isMesh && child.material) {
-              child.material.transparent = false;
-              child.material.opacity = 1;
-            }
-            if (!child.isBone) return;
-            const n = child.name.toLowerCase();
-            if (!leftUpperLeg && n.includes('left') && (n.includes('thigh') || n.includes('upleg'))) leftUpperLeg = child;
-            if (!rightUpperLeg && n.includes('right') && (n.includes('thigh') || n.includes('upleg'))) rightUpperLeg = child;
-            if (!leftLowerLeg && n.includes('left') && (n.includes('shin') || n.includes('leg'))) leftLowerLeg = child;
-            if (!rightLowerLeg && n.includes('right') && (n.includes('shin') || n.includes('leg'))) rightLowerLeg = child;
-          });
-
-          const clips = (model.animations || []).filter((a) => /walk/i.test(a.name));
-          if (clips.length > 0) {
-            mixer = new THREE.AnimationMixer(customer);
-            clips.forEach((clip) => {
-              const action = mixer.clipAction(clip);
-              action.play();
-            });
-          }
-        },
-        undefined,
-        (err) => {
-          console.error('Failed to load model', err);
-          console.log('Model URL:', modelUrl.href);
-          addFallbackModel();
-          if (errorMessage) {
-            errorMessage.textContent = '모델을 불러오지 못해 기본 모델을 사용합니다.';
-            errorMessage.style.display = 'block';
-          }
-        }
-      );
-    } catch (e) {
-      console.error('Model loader not available', e);
-      if (errorMessage) {
-        errorMessage.textContent = '모델을 불러오지 못해 기본 모델을 사용합니다.';
-        errorMessage.style.display = 'block';
-      }
-      addFallbackModel();
-    }
+    // Use a simple placeholder model built with primitives so the customer
+    // character is always visible even without external assets.
+    addFallbackModel();
 
     function updateProceduralWalk(delta) {
       if (!leftUpperLeg || !rightUpperLeg) return;
