@@ -175,11 +175,10 @@
       const errorMessage = document.getElementById('error-message');
       let money = 0;
       let satisfaction = 0;
-      let THREE, GLTFLoader, BlendLoader;
+      let THREE, GLTFLoader;
       try {
         THREE = await import('three');
         ({ GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js'));
-        ({ BlendLoader } = await import('three/examples/jsm/loaders/BlendLoader.js'));
       } catch (e) {
         console.error('3D libraries failed to load', e);
         if (errorMessage) {
@@ -293,9 +292,8 @@
     }
 
     try {
-      const modelUrl = new URL('./Unity/Assets/StreamingAssets/models/output.blend', window.location.href);
-      const isBlend = modelUrl.pathname.toLowerCase().endsWith('.blend') && BlendLoader;
-      const loader = isBlend ? new BlendLoader() : new GLTFLoader();
+      const modelUrl = new URL('./Unity/Assets/StreamingAssets/models/output.glb', window.location.href);
+      const loader = new GLTFLoader();
       loader.load(
         modelUrl.href,
         (model) => {
