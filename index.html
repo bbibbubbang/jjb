@@ -247,9 +247,11 @@
     customer.position.set(0, 0, 20);
     scene.add(customer);
     let mixer;
-    let leftUpperLeg, rightUpperLeg, leftLowerLeg, rightLowerLeg;
+    let leftUpperLeg, rightUpperLeg, leftLowerLeg, rightLowerLeg,
+      leftUpperArm, rightUpperArm;
     let walkTimer = 0;
     const walkDuration = 0.6;
+    const rotationSpeed = Math.PI / 2; // full turn in ~4 seconds
 
     function addFallbackModel() {
       const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
@@ -258,9 +260,54 @@
       torso.position.y = 1.4;
       customer.add(torso);
 
-      const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), material);
+      const head = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 0.4, 0.4),
+        material
+      );
       head.position.y = 2.1;
+
+      // facial features
+      const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+      const noseMaterial = new THREE.MeshBasicMaterial({ color: 0xffaaaa });
+      const mouthMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+
+      const eyeGeo = new THREE.SphereGeometry(0.05, 8, 8);
+      const leftEye = new THREE.Mesh(eyeGeo, eyeMaterial);
+      leftEye.position.set(-0.1, 0.05, 0.2);
+      const rightEye = leftEye.clone();
+      rightEye.position.x = 0.1;
+
+      const nose = new THREE.Mesh(
+        new THREE.BoxGeometry(0.05, 0.1, 0.1),
+        noseMaterial
+      );
+      nose.position.set(0, 0, 0.2);
+
+      const mouth = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.05, 0.01),
+        mouthMaterial
+      );
+      mouth.position.set(0, -0.1, 0.2);
+
+      head.add(leftEye);
+      head.add(rightEye);
+      head.add(nose);
+      head.add(mouth);
       customer.add(head);
+
+      function createArm(isLeft) {
+        const root = new THREE.Group();
+        const upper = new THREE.Group();
+        const upperMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(0.2, 0.6, 0.2),
+          material
+        );
+        upperMesh.position.y = -0.3;
+        upper.add(upperMesh);
+        root.add(upper);
+        upper.position.set(isLeft ? -0.35 : 0.35, 1.7, 0);
+        return { root, upper };
+      }
 
       function createLeg(isLeft) {
         const root = new THREE.Group();
@@ -289,6 +336,13 @@
       rightLowerLeg = rightLeg.lower;
       customer.add(leftLeg.root);
       customer.add(rightLeg.root);
+
+      const leftArm = createArm(true);
+      const rightArm = createArm(false);
+      leftUpperArm = leftArm.upper;
+      rightUpperArm = rightArm.upper;
+      customer.add(leftArm.root);
+      customer.add(rightArm.root);
     }
 
     // Use a simple placeholder model built with primitives so the customer
@@ -336,6 +390,8 @@
       rightUpperLeg.rotation.x = -angle;
       if (leftLowerLeg) leftLowerLeg.rotation.x = Math.max(0, -angle);
       if (rightLowerLeg) rightLowerLeg.rotation.x = Math.max(0, angle);
+      if (leftUpperArm) leftUpperArm.rotation.x = -angle;
+      if (rightUpperArm) rightUpperArm.rotation.x = angle;
     }
 
     bubble.addEventListener('click', () => {
@@ -374,6 +430,7 @@
       } else {
         updateProceduralWalk(delta);
       }
+      customer.rotation.y += rotationSpeed * delta;
 
         if (moving) {
           if (phase === 'approach') {
