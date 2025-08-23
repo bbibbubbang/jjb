@@ -175,10 +175,11 @@
       const errorMessage = document.getElementById('error-message');
       let money = 0;
       let satisfaction = 0;
-      let THREE, GLTFLoader;
+      let THREE, GLTFLoader, BlendLoader;
       try {
         THREE = await import('three');
         ({ GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js'));
+        ({ BlendLoader } = await import('three/examples/jsm/loaders/BlendLoader.js'));
       } catch (e) {
         console.error('3D libraries failed to load', e);
         if (errorMessage) {
@@ -292,14 +293,16 @@
     }
 
     try {
-      const loader = new GLTFLoader();
-      const modelUrl = new URL('./Unity/Assets/StreamingAssets/models/output.glb', window.location.href);
+      const modelUrl = new URL('./Unity/Assets/StreamingAssets/models/output.blend', window.location.href);
+      const isBlend = modelUrl.pathname.toLowerCase().endsWith('.blend') && BlendLoader;
+      const loader = isBlend ? new BlendLoader() : new GLTFLoader();
       loader.load(
         modelUrl.href,
-        (gltf) => {
+        (model) => {
+          const obj = model.scene || model;
           scene.remove(customer);
-          customer = gltf.scene;
-          customer.updateMatrixWorld(true);
+          customer = obj;
+          customer.updateMatrixWorld && customer.updateMatrixWorld(true);
           const bbox = new THREE.Box3().setFromObject(customer);
           customer.position.set(0, -bbox.min.y, 20);
           scene.add(customer);
@@ -313,14 +316,13 @@
             if (!rightLowerLeg && n.includes('right') && (n.includes('shin') || n.includes('leg'))) rightLowerLeg = child;
           });
 
-          if (gltf.animations && gltf.animations.length > 0) {
+          const clips = (model.animations || []).filter((a) => /walk/i.test(a.name));
+          if (clips.length > 0) {
             mixer = new THREE.AnimationMixer(customer);
-            // Prefer an animation clip with "walk" in its name. If none exists,
-            // fall back to the first available animation.
-            let clip = gltf.animations.find((a) => /walk/i.test(a.name));
-            if (!clip) clip = gltf.animations[0];
-            const action = mixer.clipAction(clip);
-            action.play();
+            clips.forEach((clip) => {
+              const action = mixer.clipAction(clip);
+              action.play();
+            });
           }
         },
         undefined,
@@ -335,7 +337,7 @@
         }
       );
     } catch (e) {
-      console.error('GLTFLoader not available', e);
+      console.error('Model loader not available', e);
       if (errorMessage) {
         errorMessage.textContent = '모델을 불러오지 못해 기본 모델을 사용합니다.';
         errorMessage.style.display = 'block';
