@@ -349,11 +349,12 @@
     // character is always visible even without external assets.
     addFallbackModel();
 
-    // Try loading a detailed GLB model for the customer character
+    // Load a simple custom model built for this project so we do not rely on
+    // external assets supplied by others.
     try {
       const loader = new GLTFLoader();
       const gltf = await loader.loadAsync(
-        'Unity/Assets/StreamingAssets/models/2_3d_anime_character_girl_for_blender.glb'
+        'Unity/Assets/StreamingAssets/models/simple_customer.gltf'
       );
 
       // Remove placeholder parts
@@ -361,7 +362,8 @@
       leftUpperLeg = rightUpperLeg = leftLowerLeg = rightLowerLeg = null;
 
       const model = gltf.scene;
-      model.scale.setScalar(0.01);
+      // The custom model uses the same unit scale as the scene
+      model.scale.setScalar(1);
       model.rotation.y = Math.PI; // face the counter
       // Ensure materials are opaque so the model is visible
       model.traverse((child) => {
@@ -378,7 +380,7 @@
         action.play();
       }
     } catch (e) {
-      console.warn('Failed to load customer model, using fallback', e);
+      console.warn('Failed to load custom customer model, using fallback', e);
     }
 
     function updateProceduralWalk(delta) {
