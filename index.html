@@ -295,6 +295,38 @@
     // character is always visible even without external assets.
     addFallbackModel();
 
+    // Try loading a detailed GLB model for the customer character
+    try {
+      const loader = new GLTFLoader();
+      const gltf = await loader.loadAsync(
+        'Unity/Assets/StreamingAssets/models/2_3d_anime_character_girl_for_blender.glb'
+      );
+
+      // Remove placeholder parts
+      customer.clear();
+      leftUpperLeg = rightUpperLeg = leftLowerLeg = rightLowerLeg = null;
+
+      const model = gltf.scene;
+      model.scale.setScalar(0.01);
+      model.rotation.y = Math.PI; // face the counter
+      // Ensure materials are opaque so the model is visible
+      model.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material.transparent = false;
+          child.material.opacity = 1.0;
+        }
+      });
+      customer.add(model);
+
+      if (gltf.animations && gltf.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(model);
+        const action = mixer.clipAction(gltf.animations[0]);
+        action.play();
+      }
+    } catch (e) {
+      console.warn('Failed to load customer model, using fallback', e);
+    }
+
     function updateProceduralWalk(delta) {
       if (!leftUpperLeg || !rightUpperLeg) return;
       walkTimer += delta;
