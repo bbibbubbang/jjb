@@ -175,10 +175,9 @@
       const errorMessage = document.getElementById('error-message');
       let money = 0;
       let satisfaction = 0;
-      let THREE, GLTFLoader;
+      let THREE;
       try {
         THREE = await import('three');
-        ({ GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js'));
       } catch (e) {
         console.error('3D libraries failed to load', e);
         if (errorMessage) {
@@ -241,7 +240,7 @@
     const leftOpenX = -0.75;
     const rightOpenX = 0.75;
 
-    // Customer setup using GLB model
+    // Customer setup using simple primitives
     const gender = Math.random() < 0.5 ? 'male' : 'female';
     let customer = new THREE.Group();
     customer.position.set(0, 0, 20);
@@ -273,11 +272,11 @@
       const noseMaterial = new THREE.MeshBasicMaterial({ color: 0xffaaaa });
       const mouthMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
-      const eyeGeo = new THREE.SphereGeometry(0.05, 8, 8);
+      const eyeGeo = new THREE.SphereGeometry(0.07, 8, 8);
       const leftEye = new THREE.Mesh(eyeGeo, eyeMaterial);
-      leftEye.position.set(-0.05, 0.05, 0.18);
+      leftEye.position.set(-0.07, 0.05, 0.15);
       const rightEye = leftEye.clone();
-      rightEye.position.x = 0.05;
+      rightEye.position.x = 0.07;
 
       const nose = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, 0.1), noseMaterial);
       nose.position.set(0, 0, 0.2);
@@ -345,40 +344,6 @@
     // face the counter
     customer.rotation.y = Math.PI;
 
-    // Load a simple custom model built for this project so we do not rely on
-    // external assets supplied by others.
-    try {
-      const loader = new GLTFLoader();
-      const gltf = await loader.loadAsync(
-        'Unity/Assets/StreamingAssets/models/simple_customer.gltf'
-      );
-
-      // Remove placeholder parts
-      customer.clear();
-      leftUpperLeg = rightUpperLeg = leftLowerLeg = rightLowerLeg = null;
-      customer.position.y = 0;
-
-      const model = gltf.scene;
-      // The custom model uses the same unit scale as the scene
-      model.scale.setScalar(1);
-      // Ensure materials are opaque so the model is visible
-      model.traverse((child) => {
-        if (child.isMesh && child.material) {
-          child.material.transparent = false;
-          child.material.opacity = 1.0;
-        }
-      });
-      customer.add(model);
-      centerCustomer();
-
-      if (gltf.animations && gltf.animations.length > 0) {
-        mixer = new THREE.AnimationMixer(model);
-        const action = mixer.clipAction(gltf.animations[0]);
-        action.play();
-      }
-    } catch (e) {
-      console.warn('Failed to load custom customer model, using fallback', e);
-    }
 
     function updateProceduralWalk(delta) {
       if (!leftUpperLeg || !rightUpperLeg) return;
