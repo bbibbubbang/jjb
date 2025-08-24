@@ -313,7 +313,7 @@
         upperMesh.position.y = -0.3;
         upper.add(upperMesh);
         root.add(upper);
-        upper.position.set(isLeft ? -0.35 : 0.35, 1.7, 0);
+        upper.position.set(isLeft ? -0.42 : 0.42, 1.7, 0);
 
         const lower = new THREE.Group();
         const lowerMesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.6, 0.18), skinMaterial);
@@ -366,7 +366,7 @@
     // Use a simple placeholder model built with primitives so the customer
     // character is always visible even without external assets.
     addFallbackModel();
-    customer.scale.set(0.8, 0.8, 0.8);
+    customer.scale.set(0.7, 0.7, 0.7);
     centerCustomer();
     // face the counter
     const yAxis = new THREE.Vector3(0, 1, 0);
