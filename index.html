@@ -258,9 +258,10 @@
 
     function addFallbackModel() {
       const skinMaterial = new THREE.MeshBasicMaterial({ color: 0xffe0bd });
-      const clothesMaterial = new THREE.MeshBasicMaterial({ color: 0x3333ff });
+      const shirtMaterial = new THREE.MeshBasicMaterial({ color: 0x3333ff });
+      const pantsMaterial = new THREE.MeshBasicMaterial({ color: 0x555555 });
 
-      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.3), clothesMaterial);
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.3), shirtMaterial);
       torso.position.y = 1.4;
       customer.add(torso);
 
@@ -305,18 +306,21 @@
       function createArm(isLeft) {
         const root = new THREE.Group();
         const upper = new THREE.Group();
-        const upperMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.2), skinMaterial);
+        const upperMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.2), shirtMaterial);
         upperMesh.position.y = -0.3;
         upper.add(upperMesh);
         root.add(upper);
         upper.position.set(isLeft ? -0.4 : 0.4, 1.9, 0);
 
         const lower = new THREE.Group();
-        const lowerMesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.6, 0.18), skinMaterial);
+        const lowerMesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.6, 0.18), shirtMaterial);
         lowerMesh.position.y = -0.3;
         lower.position.y = -0.6;
         lower.add(lowerMesh);
         upper.add(lower);
+        const handMesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.2, 0.18), skinMaterial);
+        handMesh.position.y = -0.7;
+        lower.add(handMesh);
 
         return { root, upper, lower };
       }
@@ -324,14 +328,14 @@
       function createLeg(isLeft) {
         const root = new THREE.Group();
         const upper = new THREE.Group();
-        const upperMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.2), skinMaterial);
+        const upperMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.2), pantsMaterial);
         upperMesh.position.y = -0.3;
         upper.add(upperMesh);
         root.add(upper);
         upper.position.set(isLeft ? -0.15 : 0.15, 0.9, 0);
 
         const lower = new THREE.Group();
-        const lowerMesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.6, 0.18), skinMaterial);
+        const lowerMesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.6, 0.18), pantsMaterial);
         lowerMesh.position.y = -0.3;
         lower.position.y = -0.6;
         lower.add(lowerMesh);
