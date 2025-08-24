@@ -404,6 +404,7 @@
       bubble.style.display = 'none';
       phase = 'leave';
       moving = true;
+      customer.rotation.y = gender === 'male' ? -Math.PI / 2 : Math.PI / 2;
     });
 
     function updateBubblePosition() {
