@@ -260,15 +260,15 @@
       const skinMaterial = new THREE.MeshBasicMaterial({ color: 0xffe0bd });
       const clothesMaterial = new THREE.MeshBasicMaterial({ color: 0x3333ff });
 
-      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 1.2, 8), clothesMaterial);
-      torso.position.y = 1.5;
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.3), clothesMaterial);
+      torso.position.y = 1.4;
       customer.add(torso);
 
-      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.2, 8), skinMaterial);
+      const neck = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), skinMaterial);
       neck.position.y = 1.9;
       customer.add(neck);
 
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), skinMaterial);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), skinMaterial);
       head.position.y = 2.2;
 
       // facial features
@@ -277,16 +277,16 @@
       const noseMaterial = new THREE.MeshBasicMaterial({ color: 0xffaaaa });
       const mouthMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
-      const eyeGeo = new THREE.SphereGeometry(0.12, 16, 16);
-      const pupilGeo = new THREE.SphereGeometry(0.05, 16, 16);
-      const highlightGeo = new THREE.SphereGeometry(0.02, 8, 8);
+      const eyeGeo = new THREE.BoxGeometry(0.12, 0.12, 0.01);
+      const pupilGeo = new THREE.BoxGeometry(0.05, 0.05, 0.01);
+      const highlightGeo = new THREE.BoxGeometry(0.02, 0.02, 0.01);
       function createEye(x) {
         const eye = new THREE.Mesh(eyeGeo, whiteEyeMaterial);
-        eye.position.set(x, 0.05, 0.18);
+        eye.position.set(x, 0.05, 0.21);
         const pupil = new THREE.Mesh(pupilGeo, pupilMaterial);
-        pupil.position.set(0, 0, 0.09);
+        pupil.position.set(0, 0, 0.01);
         const highlight = new THREE.Mesh(highlightGeo, whiteEyeMaterial);
-        highlight.position.set(-0.01, 0.02, 0.12);
+        highlight.position.set(-0.01, 0.02, 0.02);
         pupil.add(highlight);
         eye.add(pupil);
         return eye;
@@ -309,14 +309,14 @@
       function createArm(isLeft) {
         const root = new THREE.Group();
         const upper = new THREE.Group();
-        const upperMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.6, 8), skinMaterial);
+        const upperMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.2), skinMaterial);
         upperMesh.position.y = -0.3;
         upper.add(upperMesh);
         root.add(upper);
         upper.position.set(isLeft ? -0.35 : 0.35, 1.7, 0);
 
         const lower = new THREE.Group();
-        const lowerMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.6, 8), skinMaterial);
+        const lowerMesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.6, 0.18), skinMaterial);
         lowerMesh.position.y = -0.3;
         lower.position.y = -0.6;
         lower.add(lowerMesh);
@@ -328,14 +328,14 @@
       function createLeg(isLeft) {
         const root = new THREE.Group();
         const upper = new THREE.Group();
-        const upperMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.6, 8), skinMaterial);
+        const upperMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.2), skinMaterial);
         upperMesh.position.y = -0.3;
         upper.add(upperMesh);
         root.add(upper);
         upper.position.set(isLeft ? -0.15 : 0.15, 0.9, 0);
 
         const lower = new THREE.Group();
-        const lowerMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.6, 8), skinMaterial);
+        const lowerMesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.6, 0.18), skinMaterial);
         lowerMesh.position.y = -0.3;
         lower.position.y = -0.6;
         lower.add(lowerMesh);
@@ -366,6 +366,7 @@
     // Use a simple placeholder model built with primitives so the customer
     // character is always visible even without external assets.
     addFallbackModel();
+    customer.scale.set(0.8, 0.8, 0.8);
     centerCustomer();
     // face the counter
     customer.rotation.y = Math.PI;
@@ -384,6 +385,17 @@
       if (rightUpperArm) rightUpperArm.rotation.x = angle;
       if (leftLowerArm) leftLowerArm.rotation.x = -angle * 0.5;
       if (rightLowerArm) rightLowerArm.rotation.x = angle * 0.5;
+    }
+
+    function resetPose() {
+      if (leftUpperLeg) leftUpperLeg.rotation.x = 0;
+      if (rightUpperLeg) rightUpperLeg.rotation.x = 0;
+      if (leftLowerLeg) leftLowerLeg.rotation.x = 0;
+      if (rightLowerLeg) rightLowerLeg.rotation.x = 0;
+      if (leftUpperArm) leftUpperArm.rotation.x = 0;
+      if (rightUpperArm) rightUpperArm.rotation.x = 0;
+      if (leftLowerArm) leftLowerArm.rotation.x = 0;
+      if (rightLowerArm) rightLowerArm.rotation.x = 0;
     }
 
     bubble.addEventListener('click', () => {
@@ -419,8 +431,10 @@
       const delta = clock.getDelta();
       if (mixer) {
         mixer.update(delta);
-      } else {
+      } else if (moving) {
         updateProceduralWalk(delta);
+      } else {
+        resetPose();
       }
 
         if (moving) {
