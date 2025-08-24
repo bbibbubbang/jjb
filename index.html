@@ -369,7 +369,9 @@
     customer.scale.set(0.8, 0.8, 0.8);
     centerCustomer();
     // face the counter
-    customer.rotation.y = Math.PI;
+    const yAxis = new THREE.Vector3(0, 1, 0);
+    let targetQuaternion = new THREE.Quaternion().setFromAxisAngle(yAxis, Math.PI);
+    customer.quaternion.copy(targetQuaternion);
 
 
     function updateProceduralWalk(delta) {
@@ -398,13 +400,20 @@
       if (rightLowerArm) rightLowerArm.rotation.x = 0;
     }
 
+    function updateRotation() {
+      customer.quaternion.slerp(targetQuaternion, 0.1);
+    }
+
     bubble.addEventListener('click', () => {
       money += 100;
       moneyEl.textContent = money;
       bubble.style.display = 'none';
       phase = 'leave';
       moving = true;
-      customer.rotation.y = gender === 'male' ? -Math.PI / 2 : Math.PI / 2;
+      targetQuaternion.setFromAxisAngle(
+        yAxis,
+        gender === 'male' ? -Math.PI / 2 : Math.PI / 2
+      );
     });
 
     function updateBubblePosition() {
@@ -437,31 +446,32 @@
       } else {
         resetPose();
       }
-
-        if (moving) {
-          if (phase === 'approach') {
-            customer.position.z -= 0.02;
-            if (!doorPassed && customer.position.z <= doorZ + 2 && doorState === 'closed') {
-              doorState = 'opening';
-            }
-            if (!doorPassed && customer.position.z <= doorZ - 2 && doorState === 'open') {
-              doorState = 'closing';
-              doorPassed = true;
-            }
-            if (customer.position.z <= 1) {
-              moving = false;
-              bubble.style.display = 'block';
-              updateBubblePosition();
-            }
-          } else if (phase === 'leave') {
-            const dir = gender === 'male' ? -0.02 : 0.02;
-            customer.position.x += dir;
-            if (Math.abs(customer.position.x) > 5) {
-              scene.remove(customer);
-              moving = false;
-            }
+      if (moving) {
+        if (phase === 'approach') {
+          customer.position.z -= 0.02;
+          if (!doorPassed && customer.position.z <= doorZ + 2 && doorState === 'closed') {
+            doorState = 'opening';
+          }
+          if (!doorPassed && customer.position.z <= doorZ - 2 && doorState === 'open') {
+            doorState = 'closing';
+            doorPassed = true;
+          }
+          if (customer.position.z <= 1) {
+            moving = false;
+            bubble.style.display = 'block';
+            updateBubblePosition();
+          }
+        } else if (phase === 'leave') {
+          const dir = gender === 'male' ? -0.02 : 0.02;
+          customer.position.x += dir;
+          if (Math.abs(customer.position.x) > 5) {
+            scene.remove(customer);
+            moving = false;
           }
         }
+      }
+
+      updateRotation();
 
       if (doorState === 'opening') {
         leftDoor.position.x = THREE.MathUtils.lerp(leftDoor.position.x, leftOpenX, 0.1);
