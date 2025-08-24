@@ -252,6 +252,11 @@
     let walkTimer = 0;
     const walkDuration = 0.6;
 
+    function centerCustomer() {
+      const bbox = new THREE.Box3().setFromObject(customer);
+      customer.position.y = -bbox.min.y;
+    }
+
     function addFallbackModel() {
       const skinMaterial = new THREE.MeshBasicMaterial({ color: 0xffe0bd });
       const clothesMaterial = new THREE.MeshBasicMaterial({ color: 0x3333ff });
@@ -336,6 +341,7 @@
     // Use a simple placeholder model built with primitives so the customer
     // character is always visible even without external assets.
     addFallbackModel();
+    centerCustomer();
     // face the counter
     customer.rotation.y = Math.PI;
 
@@ -350,6 +356,7 @@
       // Remove placeholder parts
       customer.clear();
       leftUpperLeg = rightUpperLeg = leftLowerLeg = rightLowerLeg = null;
+      customer.position.y = 0;
 
       const model = gltf.scene;
       // The custom model uses the same unit scale as the scene
@@ -362,6 +369,7 @@
         }
       });
       customer.add(model);
+      centerCustomer();
 
       if (gltf.animations && gltf.animations.length > 0) {
         mixer = new THREE.AnimationMixer(model);
