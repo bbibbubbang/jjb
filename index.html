@@ -264,12 +264,8 @@
       torso.position.y = 1.4;
       customer.add(torso);
 
-      const neck = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), skinMaterial);
-      neck.position.y = 1.9;
-      customer.add(neck);
-
       const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), skinMaterial);
-      head.position.y = 2.2;
+      head.position.y = 2.1;
 
       // facial features
       const whiteEyeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
@@ -313,7 +309,7 @@
         upperMesh.position.y = -0.3;
         upper.add(upperMesh);
         root.add(upper);
-        upper.position.set(isLeft ? -0.42 : 0.42, 1.7, 0);
+        upper.position.set(isLeft ? -0.4 : 0.4, 1.9, 0);
 
         const lower = new THREE.Group();
         const lowerMesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.6, 0.18), skinMaterial);
