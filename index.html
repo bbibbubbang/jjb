@@ -251,19 +251,16 @@
       leftUpperArm, rightUpperArm;
     let walkTimer = 0;
     const walkDuration = 0.6;
-    const rotationSpeed = Math.PI / 2; // full turn in ~4 seconds
 
     function addFallbackModel() {
-      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+      const skinMaterial = new THREE.MeshBasicMaterial({ color: 0xffe0bd });
+      const clothesMaterial = new THREE.MeshBasicMaterial({ color: 0x3333ff });
 
-      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.0, 0.3), material);
+      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 1.0, 8), clothesMaterial);
       torso.position.y = 1.4;
       customer.add(torso);
 
-      const head = new THREE.Mesh(
-        new THREE.BoxGeometry(0.4, 0.4, 0.4),
-        material
-      );
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), skinMaterial);
       head.position.y = 2.1;
 
       // facial features
@@ -273,21 +270,15 @@
 
       const eyeGeo = new THREE.SphereGeometry(0.05, 8, 8);
       const leftEye = new THREE.Mesh(eyeGeo, eyeMaterial);
-      leftEye.position.set(-0.1, 0.05, 0.2);
+      leftEye.position.set(-0.05, 0.05, 0.18);
       const rightEye = leftEye.clone();
-      rightEye.position.x = 0.1;
+      rightEye.position.x = 0.05;
 
-      const nose = new THREE.Mesh(
-        new THREE.BoxGeometry(0.05, 0.1, 0.1),
-        noseMaterial
-      );
+      const nose = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, 0.1), noseMaterial);
       nose.position.set(0, 0, 0.2);
 
-      const mouth = new THREE.Mesh(
-        new THREE.BoxGeometry(0.2, 0.05, 0.01),
-        mouthMaterial
-      );
-      mouth.position.set(0, -0.1, 0.2);
+      const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.05, 0.01), mouthMaterial);
+      mouth.position.set(0, -0.1, 0.18);
 
       head.add(leftEye);
       head.add(rightEye);
@@ -298,10 +289,7 @@
       function createArm(isLeft) {
         const root = new THREE.Group();
         const upper = new THREE.Group();
-        const upperMesh = new THREE.Mesh(
-          new THREE.BoxGeometry(0.2, 0.6, 0.2),
-          material
-        );
+        const upperMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.6, 8), skinMaterial);
         upperMesh.position.y = -0.3;
         upper.add(upperMesh);
         root.add(upper);
@@ -312,14 +300,14 @@
       function createLeg(isLeft) {
         const root = new THREE.Group();
         const upper = new THREE.Group();
-        const upperMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.2), material);
+        const upperMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.6, 8), skinMaterial);
         upperMesh.position.y = -0.3;
         upper.add(upperMesh);
         root.add(upper);
         upper.position.set(isLeft ? -0.15 : 0.15, 0.8, 0);
 
         const lower = new THREE.Group();
-        const lowerMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.2), material);
+        const lowerMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.6, 8), skinMaterial);
         lowerMesh.position.y = -0.3;
         lower.position.y = -0.6;
         lower.add(lowerMesh);
@@ -348,6 +336,8 @@
     // Use a simple placeholder model built with primitives so the customer
     // character is always visible even without external assets.
     addFallbackModel();
+    // face the counter
+    customer.rotation.y = Math.PI;
 
     // Load a simple custom model built for this project so we do not rely on
     // external assets supplied by others.
@@ -364,7 +354,6 @@
       const model = gltf.scene;
       // The custom model uses the same unit scale as the scene
       model.scale.setScalar(1);
-      model.rotation.y = Math.PI; // face the counter
       // Ensure materials are opaque so the model is visible
       model.traverse((child) => {
         if (child.isMesh && child.material) {
@@ -432,7 +421,6 @@
       } else {
         updateProceduralWalk(delta);
       }
-      customer.rotation.y += rotationSpeed * delta;
 
         if (moving) {
           if (phase === 'approach') {
