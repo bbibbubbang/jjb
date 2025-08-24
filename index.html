@@ -256,14 +256,36 @@
       customer.position.y = -bbox.min.y;
     }
 
-    function addFallbackModel() {
+    function addFallbackModel(gender) {
       const skinMaterial = new THREE.MeshBasicMaterial({ color: 0xffe0bd });
-      const shirtMaterial = new THREE.MeshBasicMaterial({ color: 0x3333ff });
-      const pantsMaterial = new THREE.MeshBasicMaterial({ color: 0x555555 });
+      const shirtMaterial =
+        gender === 'male'
+          ? new THREE.MeshBasicMaterial({ color: 0x3333ff })
+          : new THREE.MeshBasicMaterial({ color: 0xff77aa });
+      const pantsMaterial =
+        gender === 'male'
+          ? new THREE.MeshBasicMaterial({ color: 0x555555 })
+          : skinMaterial;
+      const skirtMaterial =
+        gender === 'female'
+          ? new THREE.MeshBasicMaterial({ color: 0xffc0cb })
+          : null;
 
-      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.3), shirtMaterial);
+      const torso = new THREE.Mesh(
+        new THREE.BoxGeometry(0.6, 1.0, 0.3),
+        shirtMaterial
+      );
       torso.position.y = 1.4;
       customer.add(torso);
+
+      if (gender === 'female' && skirtMaterial) {
+        const skirt = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.5, 0.4, 0.6, 12),
+          skirtMaterial
+        );
+        skirt.position.y = 0.9;
+        customer.add(skirt);
+      }
 
       const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), skinMaterial);
       head.position.y = 2.1;
@@ -365,7 +387,7 @@
 
     // Use a simple placeholder model built with primitives so the customer
     // character is always visible even without external assets.
-    addFallbackModel();
+    addFallbackModel(gender);
     customer.scale.set(0.7, 0.7, 0.7);
     centerCustomer();
     // face the counter
