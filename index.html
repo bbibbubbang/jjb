@@ -258,18 +258,10 @@
 
     function addFallbackModel(gender) {
       const skinMaterial = new THREE.MeshBasicMaterial({ color: 0xffe0bd });
-      const shirtMaterial =
-        gender === 'male'
-          ? new THREE.MeshBasicMaterial({ color: 0x3333ff })
-          : new THREE.MeshBasicMaterial({ color: 0xff77aa });
-      const pantsMaterial =
-        gender === 'male'
-          ? new THREE.MeshBasicMaterial({ color: 0x555555 })
-          : skinMaterial;
-      const skirtMaterial =
-        gender === 'female'
-          ? new THREE.MeshBasicMaterial({ color: 0xffc0cb })
-          : null;
+      const shirtColor = gender === 'male' ? 0x3333ff : 0xff77aa;
+      const pantsColor = gender === 'male' ? 0x555555 : 0x888888;
+      const shirtMaterial = new THREE.MeshBasicMaterial({ color: shirtColor });
+      const pantsMaterial = new THREE.MeshBasicMaterial({ color: pantsColor });
 
       const torso = new THREE.Mesh(
         new THREE.BoxGeometry(0.6, 1.0, 0.3),
@@ -278,51 +270,11 @@
       torso.position.y = 1.4;
       customer.add(torso);
 
-      if (gender === 'female' && skirtMaterial) {
-        const skirt = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.5, 0.4, 0.6, 12),
-          skirtMaterial
-        );
-        skirt.position.y = 0.9;
-        customer.add(skirt);
-      }
-
-      const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), skinMaterial);
+      const head = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 0.4, 0.4),
+        skinMaterial
+      );
       head.position.y = 2.1;
-
-      // facial features
-      const whiteEyeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const pupilMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-      const noseMaterial = new THREE.MeshBasicMaterial({ color: 0xffaaaa });
-      const mouthMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-
-      const eyeGeo = new THREE.BoxGeometry(0.12, 0.12, 0.01);
-      const pupilGeo = new THREE.BoxGeometry(0.05, 0.05, 0.01);
-      const highlightGeo = new THREE.BoxGeometry(0.02, 0.02, 0.01);
-      function createEye(x) {
-        const eye = new THREE.Mesh(eyeGeo, whiteEyeMaterial);
-        eye.position.set(x, 0.05, 0.21);
-        const pupil = new THREE.Mesh(pupilGeo, pupilMaterial);
-        pupil.position.set(0, 0, 0.01);
-        const highlight = new THREE.Mesh(highlightGeo, whiteEyeMaterial);
-        highlight.position.set(-0.01, 0.02, 0.02);
-        pupil.add(highlight);
-        eye.add(pupil);
-        return eye;
-      }
-      const leftEye = createEye(-0.08);
-      const rightEye = createEye(0.08);
-
-      const nose = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, 0.1), noseMaterial);
-      nose.position.set(0, 0, 0.23);
-
-      const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.05, 0.01), mouthMaterial);
-      mouth.position.set(0, -0.1, 0.2);
-
-      head.add(leftEye);
-      head.add(rightEye);
-      head.add(nose);
-      head.add(mouth);
       customer.add(head);
 
       function createArm(isLeft) {
