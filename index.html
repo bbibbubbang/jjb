@@ -252,6 +252,69 @@
     plant.position.set(4, 0, -2);
     rooms['카운터'].add(plant);
 
+    // shoe locker and key tray
+    const shoeLocker = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 1.5, 0.5),
+      new THREE.MeshBasicMaterial({ color: 0xdeb887 })
+    );
+    shoeLocker.position.set(-6, 0.75, 0);
+    rooms['카운터'].add(shoeLocker);
+
+    const keyTray = new THREE.Mesh(
+      new THREE.BoxGeometry(0.8, 0.1, 0.4),
+      new THREE.MeshBasicMaterial({ color: 0xffe4b5 })
+    );
+    keyTray.position.set(-6, 1.3, 0.4);
+    rooms['카운터'].add(keyTray);
+
+    // vending machine
+    const vending = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 2.2, 0.8),
+      new THREE.MeshBasicMaterial({ color: 0x87cefa })
+    );
+    vending.position.set(-6, 1.1, 4);
+    rooms['카운터'].add(vending);
+
+    // display shelf
+    const displayShelf = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5, 1.5, 0.5),
+      new THREE.MeshBasicMaterial({ color: 0xf5deb3 })
+    );
+    displayShelf.position.set(5, 0.75, 1);
+    rooms['카운터'].add(displayShelf);
+
+    // wall clocks
+    const analogClock = new THREE.Mesh(
+      new THREE.CircleGeometry(0.5, 32),
+      new THREE.MeshBasicMaterial({ color: 0xffffff })
+    );
+    analogClock.position.set(0, 3, -4);
+    rooms['카운터'].add(analogClock);
+
+    const digitalClock = new THREE.Mesh(
+      new THREE.PlaneGeometry(1, 0.5),
+      new THREE.MeshBasicMaterial({ color: 0x333333 })
+    );
+    digitalClock.position.set(2, 3, -4);
+    rooms['카운터'].add(digitalClock);
+
+    // magazine rack near waiting area
+    const magazineRack = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 1, 0.3),
+      new THREE.MeshBasicMaterial({ color: 0xcd853f })
+    );
+    magazineRack.position.set(-3, 0.5, -2);
+    rooms['카운터'].add(magazineRack);
+
+    // welcome mat near entrance
+    const welcomeMat = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 1),
+      new THREE.MeshBasicMaterial({ color: 0xffa07a })
+    );
+    welcomeMat.rotation.x = -Math.PI / 2;
+    welcomeMat.position.set(0, 0.01, 9);
+    rooms['카운터'].add(welcomeMat);
+
     function createQueueRail(x, z) {
       const rail = new THREE.Group();
       const postGeom = new THREE.CylinderGeometry(0.05, 0.05, 1);
