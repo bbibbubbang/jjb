@@ -159,6 +159,53 @@ const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 0.1,
     counter.position.set(0, 0.5, 0);
     scene.add(counter);
 
+    // waiting area props
+    const waitingBench = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 0.4, 0.6),
+      new THREE.MeshBasicMaterial({ color: 0x996633 })
+    );
+    waitingBench.position.set(-4, 0.2, -2);
+    scene.add(waitingBench);
+
+    const plant = new THREE.Group();
+    const pot = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.3, 0.4, 0.5),
+      new THREE.MeshBasicMaterial({ color: 0x8b4513 })
+    );
+    pot.position.y = 0.25;
+    plant.add(pot);
+    const foliage = new THREE.Mesh(
+      new THREE.SphereGeometry(0.5),
+      new THREE.MeshBasicMaterial({ color: 0x228b22 })
+    );
+    foliage.position.y = 0.9;
+    plant.add(foliage);
+    plant.position.set(4, 0, -2);
+    scene.add(plant);
+
+    function createQueueRail(x, z) {
+      const rail = new THREE.Group();
+      const postGeom = new THREE.CylinderGeometry(0.05, 0.05, 1);
+      const postMat = new THREE.MeshBasicMaterial({ color: 0xcccccc });
+      const post1 = new THREE.Mesh(postGeom, postMat);
+      const post2 = post1.clone();
+      post1.position.set(-0.75, 0.5, 0);
+      post2.position.set(0.75, 0.5, 0);
+      rail.add(post1);
+      rail.add(post2);
+      const bar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.02, 0.02, 1.5),
+        new THREE.MeshBasicMaterial({ color: 0xff4444 })
+      );
+      bar.rotation.z = Math.PI / 2;
+      bar.position.y = 0.9;
+      rail.add(bar);
+      rail.position.set(x, 0, z);
+      return rail;
+    }
+    scene.add(createQueueRail(0, 3));
+    scene.add(createQueueRail(0, 5));
+
     // Door setup (sliding panels)
     const doorGroup = new THREE.Group();
     const doorZ = 10;
@@ -179,6 +226,72 @@ const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 0.1,
     doorGroup.add(leftDoor);
     doorGroup.add(rightDoor);
     scene.add(doorGroup);
+
+    // locker room props behind the door
+    const lockerGroup = new THREE.Group();
+    const lockerMat = new THREE.MeshBasicMaterial({ color: 0x999999 });
+    const lockerGeo = new THREE.BoxGeometry(0.8, 1.8, 0.5);
+    for (let i = 0; i < 5; i++) {
+      const leftLocker = new THREE.Mesh(lockerGeo, lockerMat);
+      leftLocker.position.set(-2, 0.9, 12 + i * 1.2);
+      lockerGroup.add(leftLocker);
+      const rightLocker = leftLocker.clone();
+      rightLocker.position.x = 2;
+      lockerGroup.add(rightLocker);
+    }
+
+    const bench = new THREE.Mesh(
+      new THREE.BoxGeometry(3, 0.3, 0.8),
+      new THREE.MeshBasicMaterial({ color: 0x8b4513 })
+    );
+    bench.position.set(0, 0.15, 13);
+    lockerGroup.add(bench);
+
+    const tv = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 1, 0.1),
+      new THREE.MeshBasicMaterial({ color: 0x000000 })
+    );
+    tv.position.set(0, 2, 11);
+    lockerGroup.add(tv);
+
+    const scale = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.5, 0.5, 0.1, 32),
+      new THREE.MeshBasicMaterial({ color: 0xffffff })
+    );
+    scale.position.set(0, 0.05, 15);
+    lockerGroup.add(scale);
+
+    const table = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 0.8, 0.6),
+      new THREE.MeshBasicMaterial({ color: 0xaaaaaa })
+    );
+    table.position.set(0, 0.4, 11.5);
+    lockerGroup.add(table);
+
+    const dryer = new THREE.Group();
+    const dryerBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.1, 0.1, 0.4),
+      new THREE.MeshBasicMaterial({ color: 0xdddddd })
+    );
+    dryerBody.rotation.z = Math.PI / 2;
+    const dryerHandle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.15, 0.05),
+      new THREE.MeshBasicMaterial({ color: 0x888888 })
+    );
+    dryerHandle.position.set(-0.2, -0.05, 0);
+    dryer.add(dryerBody);
+    dryer.add(dryerHandle);
+    dryer.position.set(0, 0.9, 11.5);
+    lockerGroup.add(dryer);
+
+    const lotion = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.08, 0.3),
+      new THREE.MeshBasicMaterial({ color: 0xffe0bd })
+    );
+    lotion.position.set(0.4, 0.65, 11.5);
+    lockerGroup.add(lotion);
+
+    scene.add(lockerGroup);
 
 const leftClosedX = -0.25;
 const rightClosedX = 0.25;
