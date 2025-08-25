@@ -195,10 +195,12 @@
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+    const aspect = window.innerWidth / window.innerHeight;
+    const d = 20;
+    const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 0.1, 1000);
     const clock = new THREE.Clock();
-    camera.position.set(0, 1.6, -1);
-    camera.lookAt(0, 1, 10);
+    camera.position.set(20, 20, 20);
+    camera.lookAt(0, 0, 0);
 
     const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
     scene.add(ambient);
@@ -283,7 +285,12 @@
         rooms[key].visible = key === name;
       }
       currentRoom = name;
-      if (name !== '카운터') bubble.style.display = 'none';
+      if (name === '카운터' && bubblePending) {
+        bubble.style.display = 'block';
+        updateBubblePosition();
+      } else {
+        bubble.style.display = 'none';
+      }
     }
     window.loadRoom = loadRoom;
     let mixer;
@@ -423,6 +430,7 @@
       money += 100;
       moneyEl.textContent = money;
       bubble.style.display = 'none';
+      bubblePending = false;
       phase = 'leave';
       moving = true;
       targetQuaternion.setFromAxisAngle(
@@ -444,9 +452,14 @@
     let phase = 'approach';
     let doorState = 'closed';
     let doorPassed = false;
+    let bubblePending = false;
 
     window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
+      const aspect = window.innerWidth / window.innerHeight;
+      camera.left = -d * aspect;
+      camera.right = d * aspect;
+      camera.top = d;
+      camera.bottom = -d;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
@@ -454,63 +467,63 @@
     function animate() {
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
-      if (currentRoom === '카운터') {
-        if (mixer) {
-          mixer.update(delta);
-        } else if (moving) {
-          updateProceduralWalk(delta);
-        } else {
-          resetPose();
-        }
-        if (moving) {
-          if (phase === 'approach') {
-            customer.position.z -= 0.02;
-            if (!doorPassed && customer.position.z <= doorZ + 2 && doorState === 'closed') {
-              doorState = 'opening';
-            }
-            if (!doorPassed && customer.position.z <= doorZ - 2 && doorState === 'open') {
-              doorState = 'closing';
-              doorPassed = true;
-            }
-            if (customer.position.z <= 1) {
-              moving = false;
+      if (mixer) {
+        mixer.update(delta);
+      } else if (moving) {
+        updateProceduralWalk(delta);
+      } else {
+        resetPose();
+      }
+      if (moving) {
+        if (phase === 'approach') {
+          customer.position.z -= 0.02;
+          if (!doorPassed && customer.position.z <= doorZ + 2 && doorState === 'closed') {
+            doorState = 'opening';
+          }
+          if (!doorPassed && customer.position.z <= doorZ - 2 && doorState === 'open') {
+            doorState = 'closing';
+            doorPassed = true;
+          }
+          if (customer.position.z <= 1) {
+            moving = false;
+            bubblePending = true;
+            if (currentRoom === '카운터') {
               bubble.style.display = 'block';
               updateBubblePosition();
             }
-          } else if (phase === 'leave') {
-            const dir = gender === 'male' ? -0.02 : 0.02;
-            customer.position.x += dir;
-            if (Math.abs(customer.position.x) > 5) {
-              scene.remove(customer);
-              moving = false;
-            }
           }
-        }
-
-        updateRotation();
-
-        if (doorState === 'opening') {
-          leftDoor.position.x = THREE.MathUtils.lerp(leftDoor.position.x, leftOpenX, 0.1);
-          rightDoor.position.x = THREE.MathUtils.lerp(rightDoor.position.x, rightOpenX, 0.1);
-          if (Math.abs(leftDoor.position.x - leftOpenX) < 0.01) {
-            leftDoor.position.x = leftOpenX;
-            rightDoor.position.x = rightOpenX;
-            doorState = 'open';
-          }
-        } else if (doorState === 'closing') {
-          leftDoor.position.x = THREE.MathUtils.lerp(leftDoor.position.x, leftClosedX, 0.1);
-          rightDoor.position.x = THREE.MathUtils.lerp(rightDoor.position.x, rightClosedX, 0.1);
-          if (Math.abs(leftDoor.position.x - leftClosedX) < 0.01) {
-            leftDoor.position.x = leftClosedX;
-            rightDoor.position.x = rightClosedX;
-            doorState = 'closed';
+        } else if (phase === 'leave') {
+          const dir = gender === 'male' ? -0.02 : 0.02;
+          customer.position.x += dir;
+          if (Math.abs(customer.position.x) > 5) {
+            scene.remove(customer);
+            moving = false;
           }
         }
       }
 
+      updateRotation();
+
+      if (doorState === 'opening') {
+        leftDoor.position.x = THREE.MathUtils.lerp(leftDoor.position.x, leftOpenX, 0.1);
+        rightDoor.position.x = THREE.MathUtils.lerp(rightDoor.position.x, rightOpenX, 0.1);
+        if (Math.abs(leftDoor.position.x - leftOpenX) < 0.01) {
+          leftDoor.position.x = leftOpenX;
+          rightDoor.position.x = rightOpenX;
+          doorState = 'open';
+        }
+      } else if (doorState === 'closing') {
+        leftDoor.position.x = THREE.MathUtils.lerp(leftDoor.position.x, leftClosedX, 0.1);
+        rightDoor.position.x = THREE.MathUtils.lerp(rightDoor.position.x, rightClosedX, 0.1);
+        if (Math.abs(leftDoor.position.x - leftClosedX) < 0.01) {
+          leftDoor.position.x = leftClosedX;
+          rightDoor.position.x = rightClosedX;
+          doorState = 'closed';
+        }
+      }
+
       renderer.render(scene, camera);
-      if (currentRoom === '카운터' && bubble.style.display !== 'none')
-        updateBubblePosition();
+      if (bubble.style.display !== 'none') updateBubblePosition();
     }
     animate();
   }
